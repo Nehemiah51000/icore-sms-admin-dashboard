@@ -1,12 +1,18 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 class ApiError extends Error {
+  status: number;
+  errors?: Record<string, string[]>;
+
   constructor(
-    public status: number,
+    status: number,
     message: string,
-    public errors?: Record<string, string[]>,
+    errors?: Record<string, string[]>,
   ) {
     super(message);
+    this.status = status;
+    this.errors = errors;
+    this.name = 'ApiError';
   }
 }
 
