@@ -16,6 +16,11 @@ class ApiError extends Error {
   }
 }
 
+interface ErrorResponseBody {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('icore_admin_token');
 
@@ -29,21 +34,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
   });
 
-  const text = await res.text();
-  console.log('RAW RESPONSE TEXT:', text);
-
-  let body: any = null;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch (e) {
-    console.error('JSON PARSE FAILED:', e);
-  }
+  const body: unknown = await res.json().catch(() => null);
 
   if (!res.ok) {
+    const errorBody = body as ErrorResponseBody | null;
     throw new ApiError(
       res.status,
-      body?.message ?? 'Something went wrong.',
-      body?.errors,
+      errorBody?.message ?? 'Something went wrong.',
+      errorBody?.errors,
     );
   }
 
