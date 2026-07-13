@@ -29,7 +29,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
   });
 
-  const body = await res.json().catch(() => null);
+  const text = await res.text();
+  console.log('RAW RESPONSE TEXT:', text);
+
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    console.error('JSON PARSE FAILED:', e);
+  }
 
   if (!res.ok) {
     throw new ApiError(
