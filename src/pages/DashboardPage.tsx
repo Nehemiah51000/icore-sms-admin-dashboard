@@ -15,6 +15,7 @@ import {
   TableSkeleton,
 } from '../ui/Table/Table';
 import { StatusBadge } from '../ui/StatusBadge/StatusBadge';
+import { getClients } from '../lib/api/clients';
 
 export function DashboardPage() {
   const { data: providers, isLoading: providersLoading } = useQuery({
@@ -29,6 +30,11 @@ export function DashboardPage() {
 
   const activeProviders =
     providers?.filter((p) => p.status === 'active').length ?? 0;
+
+  const { data: clients, isLoading: clientsLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: getClients,
+  });
 
   return (
     <div>
@@ -54,8 +60,9 @@ export function DashboardPage() {
         />
         <StatCard
           label='Total Clients'
-          value='—'
+          value={clients?.length ?? 0}
           icon={<Users className='h-5 w-5' />}
+          loading={clientsLoading}
         />
       </div>
 
