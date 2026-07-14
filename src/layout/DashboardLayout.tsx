@@ -1,5 +1,11 @@
 import { Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, Receipt } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Receipt,
+  Settings,
+} from 'lucide-react';
 import { AppShell } from './AppShell/AppShell';
 
 const navLinks = [
@@ -18,6 +24,11 @@ const navLinks = [
     to: '/transactions',
     label: 'Transactions',
     icon: <Receipt className='h-4 w-4' />,
+  },
+  {
+    to: '/settings',
+    label: 'Settings',
+    icon: <Settings className='h-4 w-4' />,
   },
 ];
 

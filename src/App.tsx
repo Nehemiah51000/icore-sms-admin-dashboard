@@ -6,6 +6,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import { DashboardLayout } from './layout/DashboardLayout';
 import { ClientsPage } from './pages/ClientsPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
           <Route path='/providers' element={<ProvidersPage />} />
           <Route path='/clients' element={<ClientsPage />} />
           <Route path='/transactions' element={<TransactionsPage />} />
-          {/* /clients, /transactions added as we build each */}
+          <Route path='/settings' element={<SettingsPage />} />
         </Route>
       </Route>
     </Routes>
