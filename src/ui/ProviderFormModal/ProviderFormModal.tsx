@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -12,8 +11,8 @@ import { ApiError } from '../../lib/api';
 import { Modal } from '../Modal/Modal';
 import { Input } from '../Input/Input';
 import { Select } from '../Select/Select';
-import { Textarea } from '../Textarea/Textarea';
 import { Button } from '../Button/Button';
+import { Textarea } from '../TextArea/TextArea';
 
 interface ProviderFormModalProps {
   open: boolean;
@@ -35,20 +34,33 @@ interface FormState {
   status: 'active' | 'inactive';
 }
 
-export function ProviderFormModal({
-  open,
-  onClose,
-  provider,
-}: ProviderFormModalProps) {
+interface ProviderFormProps {
+  onClose: () => void;
+  provider?: Provider | null;
+}
+
+/**
+ * Owns all form state and the footer's action buttons in one place.
+ * Only ever mounted while the modal is open (see ProviderFormModal below),
+ * and keyed by provider id — so every open gets a fresh instance with
+ * correctly-derived initial state. No useEffect needed to "sync" state,
+ * since there's nothing to sync: the right values are simply the initial
+ * values at mount time.
+ */
+function ProviderForm({ onClose, provider }: ProviderFormProps) {
   const queryClient = useQueryClient();
   const isEditing = Boolean(provider);
 
-  const [form, setForm] = useState<FormState>({
-    name: '',
-    slug: '',
-    base_url: '',
-    status: 'active',
-  });
+  const [form, setForm] = useState<FormState>(
+    provider
+      ? {
+          name: provider.name,
+          slug: provider.slug,
+          base_url: provider.base_url,
+          status: provider.status,
+        }
+      : { name: '', slug: '', base_url: '', status: 'active' },
+  );
   const [credentialValues, setCredentialValues] = useState<
     Record<string, string>
   >({});
@@ -57,22 +69,6 @@ export function ProviderFormModal({
 
   const fields = getFieldsForSlug(form.slug);
   const isKnownProvider = fields !== null;
-
-  useEffect(() => {
-    if (provider) {
-      setForm({
-        name: provider.name,
-        slug: provider.slug,
-        base_url: provider.base_url,
-        status: provider.status,
-      });
-    } else {
-      setForm({ name: '', slug: '', base_url: '', status: 'active' });
-    }
-    setCredentialValues({});
-    setRawJson('{\n  \n}');
-    setErrors({});
-  }, [provider, open]);
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -134,24 +130,7 @@ export function ProviderFormModal({
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={isEditing ? `Edit ${provider?.name}` : 'Add Provider'}
-      size='lg'
-      footer={
-        <>
-          <Button
-            variant='secondary'
-            onClick={onClose}
-            disabled={mutation.isPending}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} loading={mutation.isPending}>
-            {isEditing ? 'Save Changes' : 'Create Provider'}
-          </Button>
-        </>
-      }>
+    <div>
       <form className='space-y-4'>
         <Input
           label='Display Name'
@@ -237,6 +216,40 @@ export function ProviderFormModal({
           </div>
         )}
       </form>
+
+      <div className='flex items-center justify-end gap-2 -mx-5 -mb-4 mt-6 px-5 py-4 border-t border-border-main bg-bg-base/40'>
+        <Button
+          variant='secondary'
+          onClick={onClose}
+          disabled={mutation.isPending}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} loading={mutation.isPending}>
+          {isEditing ? 'Save Changes' : 'Create Provider'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function ProviderFormModal({
+  open,
+  onClose,
+  provider,
+}: ProviderFormModalProps) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={provider ? `Edit ${provider.name}` : 'Add Provider'}
+      size='lg'>
+      {open && (
+        <ProviderForm
+          key={provider?.id ?? 'new'}
+          onClose={onClose}
+          provider={provider}
+        />
+      )}
     </Modal>
   );
 }
