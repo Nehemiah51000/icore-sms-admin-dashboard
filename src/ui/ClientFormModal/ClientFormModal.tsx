@@ -7,7 +7,12 @@ import {
   clientSchema,
   type ClientFormValues,
 } from '../../lib/schemas/clientSchemas';
-import { createClient, updateClient, type Client } from '../../lib/api/clients';
+import {
+  createClient,
+  updateClient,
+  type Client,
+  type ClientPayload,
+} from '../../lib/api/clients';
 import { getProviders } from '../../lib/api/providers';
 import { ApiError } from '../../lib/api';
 import { Modal } from '../Modal/Modal';
@@ -42,7 +47,17 @@ export function ClientFormModal({
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
-    defaultValues: { status: 'active' },
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      login: '',
+      password: '',
+      provider_id: '',
+      provider_login_name: '',
+      status: 'active',
+      low_balance_threshold: '',
+    },
   });
 
   useEffect(() => {
@@ -53,10 +68,13 @@ export function ClientFormModal({
         phone: client.phone,
         login: client.login,
         password: '',
-        provider_id: client.provider_id,
+        provider_id: String(client.provider_id),
         provider_login_name: client.provider_login_name,
         status: client.status,
-        low_balance_threshold: client.low_balance_threshold ?? undefined,
+        low_balance_threshold:
+          client.low_balance_threshold != null
+            ? String(client.low_balance_threshold)
+            : '',
       });
     } else {
       reset({
@@ -65,21 +83,36 @@ export function ClientFormModal({
         phone: '',
         login: '',
         password: '',
-        provider_id: undefined,
+        provider_id: '',
         provider_login_name: '',
         status: 'active',
-        low_balance_threshold: undefined,
+        low_balance_threshold: '',
       });
     }
   }, [client, reset, open]);
 
   const mutation = useMutation({
     mutationFn: (values: ClientFormValues) => {
-      const payload = { ...values };
-      if (isEditing && !payload.password) delete payload.password;
+      const payload: ClientPayload = {
+        name: values.name ? values.name : undefined,
+        email: values.email ? values.email : undefined,
+        phone: values.phone,
+        login: values.login,
+        provider_id: Number(values.provider_id),
+        provider_login_name: values.provider_login_name,
+        status: values.status,
+        low_balance_threshold: values.low_balance_threshold
+          ? Number(values.low_balance_threshold)
+          : undefined,
+      };
+
+      if (values.password) {
+        payload.password = values.password;
+      }
+
       return isEditing
         ? updateClient(client!.id, payload)
-        : createClient(payload as any);
+        : createClient(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });

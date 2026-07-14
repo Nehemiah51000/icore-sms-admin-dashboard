@@ -13,12 +13,10 @@ export const clientSchema = z.object({
     .regex(/^254\d{9}$/, 'Use format 254XXXXXXXXX, no leading 0 or +'),
   login: z.string().min(1, 'Login is required'),
   password: z.string().optional(),
-  provider_id: z.coerce
-    .number({ message: 'Select a provider' })
-    .min(1, 'Select a provider'),
+  provider_id: z.string().min(1, 'Select a provider'),
   provider_login_name: z.string().min(1, 'Provider login name is required'),
   status: z.enum(['active', 'suspended']),
-  low_balance_threshold: z.coerce.number().optional(),
+  low_balance_threshold: z.string().optional(),
 });
 
 export type ClientFormValues = z.infer<typeof clientSchema>;
