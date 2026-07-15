@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,28 +25,9 @@ interface ClientFormModalProps {
   client?: Client | null;
 }
 
-export function ClientFormModal({
-  open,
-  onClose,
-  client,
-}: ClientFormModalProps) {
-  const queryClient = useQueryClient();
-  const isEditing = Boolean(client);
-
-  const { data: providers } = useQuery({
-    queryKey: ['providers'],
-    queryFn: getProviders,
-  });
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors },
-  } = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
-    defaultValues: {
+function defaultValuesFor(client?: Client | null): ClientFormValues {
+  if (!client) {
+    return {
       name: '',
       email: '',
       phone: '',
@@ -57,39 +37,52 @@ export function ClientFormModal({
       provider_login_name: '',
       status: 'active',
       low_balance_threshold: '',
-    },
+    };
+  }
+  return {
+    name: client.name ?? '',
+    email: client.email ?? '',
+    phone: client.phone,
+    login: client.login,
+    password: '',
+    provider_id: String(client.provider_id),
+    provider_login_name: client.provider_login_name,
+    status: client.status,
+    low_balance_threshold:
+      client.low_balance_threshold != null
+        ? String(client.low_balance_threshold)
+        : '',
+  };
+}
+
+interface ClientFormProps {
+  onClose: () => void;
+  client?: Client | null;
+}
+
+/**
+ * Owns all form state. Only ever mounted while the modal is open (see
+ * ClientFormModal below), keyed by client id — every open gets a fresh
+ * instance with correctly-derived initial values via defaultValuesFor().
+ * No useEffect needed to "sync" values after the fact.
+ */
+function ClientForm({ onClose, client }: ClientFormProps) {
+  const queryClient = useQueryClient();
+  const isEditing = Boolean(client);
+  const { data: providers } = useQuery({
+    queryKey: ['providers'],
+    queryFn: getProviders,
   });
 
-  useEffect(() => {
-    if (client) {
-      reset({
-        name: client.name ?? '',
-        email: client.email ?? '',
-        phone: client.phone,
-        login: client.login,
-        password: '',
-        provider_id: String(client.provider_id),
-        provider_login_name: client.provider_login_name,
-        status: client.status,
-        low_balance_threshold:
-          client.low_balance_threshold != null
-            ? String(client.low_balance_threshold)
-            : '',
-      });
-    } else {
-      reset({
-        name: '',
-        email: '',
-        phone: '',
-        login: '',
-        password: '',
-        provider_id: '',
-        provider_login_name: '',
-        status: 'active',
-        low_balance_threshold: '',
-      });
-    }
-  }, [client, reset, open]);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: defaultValuesFor(client),
+  });
 
   const mutation = useMutation({
     mutationFn: (values: ClientFormValues) => {
@@ -105,18 +98,16 @@ export function ClientFormModal({
           ? Number(values.low_balance_threshold)
           : undefined,
       };
-
-      if (values.password) {
-        payload.password = values.password;
-      }
-
+      if (values.password) payload.password = values.password;
       return isEditing
         ? updateClient(client!.id, payload)
         : createClient(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      toast.success(isEditing ? 'Client updated.' : 'Client created.');
+      toast.success(
+        isEditing ? 'Client updated successfully.' : 'New client created.',
+      );
       onClose();
     },
     onError: (error) => {
@@ -136,27 +127,8 @@ export function ClientFormModal({
     providers?.map((p) => ({ value: String(p.id), label: p.name })) ?? [];
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={isEditing ? `Edit ${client?.name ?? client?.login}` : 'Add Client'}
-      size='lg'
-      footer={
-        <>
-          <Button
-            variant='secondary'
-            onClick={onClose}
-            disabled={mutation.isPending}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit((values) => mutation.mutate(values))}
-            loading={mutation.isPending}>
-            {isEditing ? 'Save Changes' : 'Create Client'}
-          </Button>
-        </>
-      }>
-      <form className='space-y-4'>
+    <div className='flex flex-col'>
+      <form className='space-y-5 max-h-[65vh] overflow-y-auto px-1'>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <Input
             label='Name'
@@ -184,6 +156,7 @@ export function ClientFormModal({
           <Input
             label='Login'
             placeholder="Client's login username"
+            hint='What the client types to sign in — separate from their display name.'
             error={errors.login?.message}
             {...register('login')}
           />
@@ -232,6 +205,46 @@ export function ClientFormModal({
           />
         </div>
       </form>
+
+      <div className='flex flex-col-reverse sm:flex-row items-center justify-end gap-3 -mx-6 -mb-5 mt-6 px-6 py-4 border-t border-border-main bg-bg-base/30'>
+        <Button
+          variant='secondary'
+          onClick={onClose}
+          disabled={mutation.isPending}
+          fullWidth
+          className='sm:w-auto'>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit((values) => mutation.mutate(values))}
+          loading={mutation.isPending}
+          fullWidth
+          className='sm:w-auto'>
+          {isEditing ? 'Save Changes' : 'Create Client'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function ClientFormModal({
+  open,
+  onClose,
+  client,
+}: ClientFormModalProps) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={client ? `Edit ${client.name ?? client.login}` : 'Add New Client'}
+      size='lg'>
+      {open && (
+        <ClientForm
+          key={client?.id ?? 'new'}
+          onClose={onClose}
+          client={client}
+        />
+      )}
     </Modal>
   );
 }
