@@ -26,15 +26,25 @@ export function ConfirmDeleteModal({
       size='sm'
       footer={
         <>
-          <Button variant='secondary' onClick={onClose} disabled={loading}>
+          <Button
+            variant='secondary'
+            onClick={onClose}
+            disabled={loading}
+            fullWidth
+            className='sm:w-auto'>
             Cancel
           </Button>
-          <Button variant='destructive' onClick={onConfirm} loading={loading}>
+          <Button
+            variant='destructive'
+            onClick={onConfirm}
+            loading={loading}
+            fullWidth
+            className='sm:w-auto'>
             Delete
           </Button>
         </>
       }>
-      <p className='text-sm text-text-main'>{description}</p>
+      <p className='text-sm text-text-muted leading-relaxed'>{description}</p>
     </Modal>
   );
 }
