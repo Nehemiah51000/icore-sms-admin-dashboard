@@ -1,115 +1,163 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  getSettings,
-  updateSettings,
-  type Settings,
-} from '../lib/api/settings';
+import { getProfile, updateProfile, updatePassword } from '../lib/api/profile';
 import { ApiError } from '../lib/api';
+import { useAuthStore } from '../stores/authStore';
 import { Input } from '../ui/Input/Input';
 import { Button } from '../ui/Button/Button';
 import { Card, CardHeader, CardBody } from '../ui/Card/Card';
-import { Textarea } from '../ui/TextArea/TextArea';
 
-function SettingsForm({ initial }: { initial: Settings }) {
+interface Admin {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+function ProfileForm({ initial }: { initial: Admin }) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState<Partial<Settings>>(initial);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const token = useAuthStore((s) => s.token);
+  const [name, setName] = useState(initial.name);
+  const [email, setEmail] = useState(initial.email);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const mutation = useMutation({
-    mutationFn: () => updateSettings(form),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
-      toast.success('Settings updated.');
+    mutationFn: () => updateProfile({ name, email }),
+    onSuccess: (admin) => {
+      if (token) setAuth(admin, token);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Profile updated.');
     },
     onError: (error) => {
       if (error instanceof ApiError && error.errors) {
         const flat: Record<string, string> = {};
-        Object.entries(error.errors).forEach(([field, messages]) => {
-          flat[field] = messages[0];
-        });
+        Object.entries(error.errors).forEach(([f, m]) => (flat[f] = m[0]));
         setErrors(flat);
       } else {
         toast.error(
           error instanceof ApiError
             ? error.message
-            : 'Could not save settings.',
+            : 'Could not update profile.',
         );
       }
     },
   });
 
   return (
-    <>
+    <div className='space-y-4'>
       <Input
-        label='Company Name'
-        value={form.company_name ?? ''}
-        onChange={(e) => setForm({ ...form, company_name: e.target.value })}
-        error={errors.company_name}
+        label='Name'
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        error={errors.name}
       />
       <Input
-        label='Support Email'
+        label='Email'
         type='email'
-        value={form.support_email ?? ''}
-        onChange={(e) => setForm({ ...form, support_email: e.target.value })}
-        error={errors.support_email}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        error={errors.email}
       />
-      <Input
-        label='Support Phone'
-        value={form.support_phone ?? ''}
-        onChange={(e) => setForm({ ...form, support_phone: e.target.value })}
-        error={errors.support_phone}
-      />
-      <Input
-        label='Paybill Display Number'
-        hint="Shown to clients — for reference only, doesn't affect actual STK push routing."
-        value={form.paybill_display_number ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, paybill_display_number: e.target.value })
-        }
-        error={errors.paybill_display_number}
-      />
-      <Textarea
-        label='Business Hours'
-        value={form.business_hours ?? ''}
-        onChange={(e) => setForm({ ...form, business_hours: e.target.value })}
-        error={errors.business_hours}
-      />
-      <div className='flex justify-end pt-2'>
+      <div className='flex justify-end'>
         <Button onClick={() => mutation.mutate()} loading={mutation.isPending}>
-          Save Changes
+          Save Profile
         </Button>
       </div>
-    </>
+    </div>
+  );
+}
+
+function PasswordForm() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updatePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+      }),
+    onSuccess: () => {
+      toast.success('Password updated.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setErrors({});
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.errors) {
+        const flat: Record<string, string> = {};
+        Object.entries(error.errors).forEach(([f, m]) => (flat[f] = m[0]));
+        setErrors(flat);
+      } else {
+        toast.error(
+          error instanceof ApiError
+            ? error.message
+            : 'Could not update password.',
+        );
+      }
+    },
+  });
+
+  return (
+    <div className='space-y-4'>
+      <Input
+        label='Current Password'
+        type='password'
+        value={currentPassword}
+        onChange={(e) => setCurrentPassword(e.target.value)}
+        error={errors.current_password}
+      />
+      <Input
+        label='New Password'
+        type='password'
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        error={errors.new_password}
+      />
+      <Input
+        label='Confirm New Password'
+        type='password'
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+      />
+      <div className='flex justify-end'>
+        <Button onClick={() => mutation.mutate()} loading={mutation.isPending}>
+          Update Password
+        </Button>
+      </div>
+    </div>
   );
 }
 
 export function SettingsPage() {
   const { data, isLoading } = useQuery({
-    queryKey: ['settings'],
-    queryFn: getSettings,
+    queryKey: ['profile'],
+    queryFn: getProfile,
   });
 
   return (
-    <div>
-      <div className='mb-6'>
+    <div className='max-w-2xl space-y-6'>
+      <div>
         <h1 className='text-xl font-semibold text-text-main'>Settings</h1>
         <p className='text-sm text-text-muted mt-0.5'>
-          Company details shown to clients and used in system communications.
+          Manage your admin account details.
         </p>
       </div>
 
-      <Card className='max-w-2xl'>
+      <Card>
         <CardHeader>
-          <span className='text-sm font-semibold text-text-main'>
-            Company Information
-          </span>
+          <span className='text-sm font-semibold text-text-main'>Profile</span>
         </CardHeader>
-        <CardBody className='space-y-4'>
+        <CardBody>
           {isLoading || !data ? (
             <div className='space-y-3'>
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 2 }).map((_, i) => (
                 <div
                   key={i}
                   className='h-10 rounded bg-bg-base animate-pulse'
@@ -117,8 +165,17 @@ export function SettingsPage() {
               ))}
             </div>
           ) : (
-            <SettingsForm key={data.id} initial={data} />
+            <ProfileForm key={data.id} initial={data} />
           )}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <span className='text-sm font-semibold text-text-main'>Password</span>
+        </CardHeader>
+        <CardBody>
+          <PasswordForm />
         </CardBody>
       </Card>
     </div>
