@@ -34,6 +34,23 @@
   --color-success-500: #16a34a; --color-success-600: #15803d;
   --color-warning-500: #eab308; --color-warning-600: #ca8a04;
   --color-error-500: #dc2626;   --color-error-600: #b91c1c;
+
+  --animate-theme-fade: fade-in 0.2s ease-out;
+  --animate-page-in: page-in 0.25s ease-out;
+  --animate-modal-in: modal-in 0.18s ease-out;
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+dialog::backdrop {
+  animation: fade-in 0.15s ease-out;
 }
 
 /* Fallback/Light Values */
