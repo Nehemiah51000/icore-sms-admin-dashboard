@@ -60,7 +60,7 @@ export function TransactionsPage() {
           placeholder='All statuses'
           value={status}
           onChange={(e) => handleFilterChange(setStatus, e.target.value)}
-          className='sm:max-w-[180px]'
+          className='sm:max-w-full'
         />
         <Select
           options={
@@ -70,7 +70,7 @@ export function TransactionsPage() {
           placeholder='All providers'
           value={providerId}
           onChange={(e) => handleFilterChange(setProviderId, e.target.value)}
-          className='sm:max-w-[180px]'
+          className='sm:max-w-full'
         />
       </div>
 
