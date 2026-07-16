@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { loginSchema, type LoginFormValues } from '../lib/schemas/authSchemas';
 import { loginAdmin } from '../lib/api/auth';
@@ -14,6 +15,16 @@ import { Input } from '../ui/Input/Input';
 export function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const [searchParams] = useSearchParams();
+  const expired = searchParams.get('expired') === '1';
+
+  // Legitimate one-time effect: firing an imperative toast in response to
+  // arriving here via a redirect, not syncing React state from React state.
+  useEffect(() => {
+    if (expired) {
+      toast.error('Your session has expired. Please sign in again.');
+    }
+  }, [expired]);
 
   const {
     register,
@@ -35,12 +46,10 @@ export function LoginPage() {
     onError: (error) => {
       if (error instanceof ApiError) {
         if (error.errors) {
-          // Field-specific validation errors from Laravel
           Object.entries(error.errors).forEach(([field, messages]) => {
             setError(field as keyof LoginFormValues, { message: messages[0] });
           });
         } else {
-          // Invalid credentials, or anything else without a field breakdown
           setError('email', { message: error.message });
         }
       } else {
