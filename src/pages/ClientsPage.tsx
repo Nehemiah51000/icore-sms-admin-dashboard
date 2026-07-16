@@ -19,6 +19,7 @@ import { Button } from '../ui/Button/Button';
 import { Card, CardBody } from '../ui/Card/Card';
 import { ClientFormModal } from '../ui/ClientFormModal/ClientFormModal';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal/ConfirmDeleteModal';
+import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
 
 export function ClientsPage() {
   const queryClient = useQueryClient();
@@ -26,9 +27,16 @@ export function ClientsPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
 
-  const { data: clients, isLoading } = useQuery({
+  const {
+    data: clients,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['clients'],
     queryFn: getClients,
+    meta: { silent: true },
   });
 
   const deleteMutation = useMutation({
@@ -76,7 +84,16 @@ export function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isError ? (
+                <TableEmpty colSpan={5}>
+                  <QueryErrorState
+                    message={
+                      error instanceof ApiError ? error.message : undefined
+                    }
+                    onRetry={() => refetch()}
+                  />
+                </TableEmpty>
+              ) : isLoading ? (
                 <TableSkeleton rows={4} columns={5} />
               ) : !clients?.length ? (
                 <TableEmpty colSpan={5}>

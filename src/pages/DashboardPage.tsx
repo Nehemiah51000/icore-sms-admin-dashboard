@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { Building2, Users, AlertTriangle } from 'lucide-react';
 import { getProviders } from '../lib/api/providers';
+import { getClients } from '../lib/api/clients';
 import { getLowBalanceClients } from '../lib/api/dashboard';
+import { ApiError } from '../lib/api';
 import { StatCard } from '../ui/StatCard/StatCard';
 import { Card, CardHeader, CardBody } from '../ui/Card/Card';
 import {
@@ -15,7 +17,7 @@ import {
   TableSkeleton,
 } from '../ui/Table/Table';
 import { StatusBadge } from '../ui/StatusBadge/StatusBadge';
-import { getClients } from '../lib/api/clients';
+import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
 
 export function DashboardPage() {
   const { data: providers, isLoading: providersLoading } = useQuery({
@@ -23,18 +25,25 @@ export function DashboardPage() {
     queryFn: getProviders,
   });
 
-  const { data: lowBalanceClients, isLoading: lowBalanceLoading } = useQuery({
-    queryKey: ['dashboard', 'low-balance-clients'],
-    queryFn: getLowBalanceClients,
-  });
-
-  const activeProviders =
-    providers?.filter((p) => p.status === 'active').length ?? 0;
-
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: getClients,
   });
+
+  const {
+    data: lowBalanceClients,
+    isLoading: lowBalanceLoading,
+    isError: lowBalanceError,
+    error: lowBalanceErrorObj,
+    refetch: refetchLowBalance,
+  } = useQuery({
+    queryKey: ['dashboard', 'low-balance-clients'],
+    queryFn: getLowBalanceClients,
+    meta: { silent: true },
+  });
+
+  const activeProviders =
+    providers?.filter((p) => p.status === 'active').length ?? 0;
 
   return (
     <div>
@@ -83,7 +92,18 @@ export function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lowBalanceLoading ? (
+              {lowBalanceError ? (
+                <TableEmpty colSpan={3}>
+                  <QueryErrorState
+                    message={
+                      lowBalanceErrorObj instanceof ApiError
+                        ? lowBalanceErrorObj.message
+                        : undefined
+                    }
+                    onRetry={() => refetchLowBalance()}
+                  />
+                </TableEmpty>
+              ) : lowBalanceLoading ? (
                 <TableSkeleton rows={3} columns={3} />
               ) : !lowBalanceClients?.length ? (
                 <TableEmpty colSpan={3}>

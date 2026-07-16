@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { getTransaction } from '../../lib/api/transactions';
 import { statusToVariant, stageLabel } from '../../lib/statusMappings';
+import { ApiError } from '../../lib/api';
 import { Modal } from '../Modal/Modal';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import { Button } from '../Button/Button';
+import { QueryErrorState } from '../QueryErrorState/QueryErrorState';
 
 interface TransactionDetailModalProps {
   transactionId: number | null;
@@ -25,10 +27,17 @@ export function TransactionDetailModal({
   transactionId,
   onClose,
 }: TransactionDetailModalProps) {
-  const { data: txn, isLoading } = useQuery({
+  const {
+    data: txn,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['transaction', transactionId],
     queryFn: () => getTransaction(transactionId!),
     enabled: transactionId !== null,
+    meta: { silent: true },
   });
 
   return (
@@ -42,7 +51,12 @@ export function TransactionDetailModal({
           Close
         </Button>
       }>
-      {isLoading || !txn ? (
+      {isError ? (
+        <QueryErrorState
+          message={error instanceof ApiError ? error.message : undefined}
+          onRetry={() => refetch()}
+        />
+      ) : isLoading || !txn ? (
         <div className='space-y-3'>
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className='h-5 rounded bg-bg-base animate-pulse' />

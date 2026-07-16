@@ -4,6 +4,7 @@ import { Receipt } from 'lucide-react';
 import { getTransactions } from '../lib/api/transactions';
 import { getProviders } from '../lib/api/providers';
 import { statusToVariant, stageLabel } from '../lib/statusMappings';
+import { ApiError } from '../lib/api';
 import {
   Table,
   TableHeader,
@@ -19,6 +20,7 @@ import { StatusBadge } from '../ui/StatusBadge/StatusBadge';
 import { Select } from '../ui/Select/Select';
 import { Card, CardBody } from '../ui/Card/Card';
 import { TransactionDetailModal } from '../ui/TransactionDetailModal/TransactionDetailModal';
+import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
 
 export function TransactionsPage() {
   const [page, setPage] = useState(1);
@@ -31,9 +33,10 @@ export function TransactionsPage() {
     queryFn: getProviders,
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['transactions', { page, status, providerId }],
     queryFn: () => getTransactions({ page, status, provider_id: providerId }),
+    meta: { silent: true },
   });
 
   function handleFilterChange(setter: (v: string) => void, value: string) {
@@ -60,7 +63,7 @@ export function TransactionsPage() {
           placeholder='All statuses'
           value={status}
           onChange={(e) => handleFilterChange(setStatus, e.target.value)}
-          className='sm:max-w-full'
+          containerClassName='sm:max-w-[180px]'
         />
         <Select
           options={
@@ -70,7 +73,7 @@ export function TransactionsPage() {
           placeholder='All providers'
           value={providerId}
           onChange={(e) => handleFilterChange(setProviderId, e.target.value)}
-          className='sm:max-w-full'
+          containerClassName='sm:max-w-[180px]'
         />
       </div>
 
@@ -88,7 +91,16 @@ export function TransactionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isError ? (
+                <TableEmpty colSpan={6}>
+                  <QueryErrorState
+                    message={
+                      error instanceof ApiError ? error.message : undefined
+                    }
+                    onRetry={() => refetch()}
+                  />
+                </TableEmpty>
+              ) : isLoading ? (
                 <TableSkeleton rows={6} columns={6} />
               ) : !data?.data.length ? (
                 <TableEmpty colSpan={6}>
