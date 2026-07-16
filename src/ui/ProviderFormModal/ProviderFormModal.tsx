@@ -39,18 +39,9 @@ interface ProviderFormProps {
   provider?: Provider | null;
 }
 
-/**
- * Owns all form state and the footer's action buttons in one place.
- * Only ever mounted while the modal is open (see ProviderFormModal below),
- * and keyed by provider id — so every open gets a fresh instance with
- * correctly-derived initial state. No useEffect needed to "sync" state,
- * since there's nothing to sync: the right values are simply the initial
- * values at mount time.
- */
 function ProviderForm({ onClose, provider }: ProviderFormProps) {
   const queryClient = useQueryClient();
   const isEditing = Boolean(provider);
-
   const [form, setForm] = useState<FormState>(
     provider
       ? {
@@ -66,20 +57,17 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
   >({});
   const [rawJson, setRawJson] = useState('{\n  \n}');
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const fields = getFieldsForSlug(form.slug);
   const isKnownProvider = fields !== null;
 
   const mutation = useMutation({
     mutationFn: () => {
       let credentials: Record<string, string>;
-
       if (isKnownProvider) {
         credentials = credentialValues;
       } else {
         credentials = JSON.parse(rawJson);
       }
-
       const payload = { ...form, credentials };
       return isEditing
         ? updateProvider(provider!.id, payload)
@@ -87,7 +75,11 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      toast.success(isEditing ? 'Provider updated.' : 'Provider created.');
+      toast.success(
+        isEditing
+          ? 'Provider details modified.'
+          : 'Successfully created provider.',
+      );
       onClose();
     },
     onError: (error) => {
@@ -110,7 +102,6 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
     if (!form.name) nextErrors.name = 'Name is required';
     if (!form.slug) nextErrors.slug = 'Select a provider type';
     if (!form.base_url) nextErrors.base_url = 'Base URL is required';
-
     if (isKnownProvider) {
       fields!.forEach((f) => {
         if (f.required && !credentialValues[f.key]) {
@@ -124,32 +115,29 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
         nextErrors.credentials = 'Must be valid JSON';
       }
     }
-
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length === 0) mutation.mutate();
   }
 
   return (
-    <div>
-      <form className='space-y-4'>
+    <div className='flex flex-col h-full'>
+      <form className='space-y-5 max-h-[60vh] overflow-y-auto px-1 scrollbar-thin'>
         <Input
           label='Display Name'
-          placeholder='Zettatel'
+          placeholder='e.g. Zettatel Core'
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           error={errors.name}
         />
-
         <Select
           label='Provider Type'
-          placeholder='Select provider'
+          placeholder='Select provider type'
           options={PROVIDER_OPTIONS}
           value={form.slug}
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
           error={errors.slug}
-          hint='Determines which credential fields appear below.'
+          hint='Determines custom parameters required below.'
         />
-
         <Input
           label='Base URL'
           placeholder='https://portal.zettatel.com/SMSApi'
@@ -157,7 +145,6 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
           onChange={(e) => setForm({ ...form, base_url: e.target.value })}
           error={errors.base_url}
         />
-
         <Select
           label='Status'
           options={[
@@ -172,18 +159,16 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
             })
           }
         />
-
         {form.slug && (
-          <div className='border-t border-border-main pt-4'>
-            <p className='text-xs font-semibold uppercase text-text-muted mb-3'>
-              Credentials
+          <div className='border-t border-border-main pt-5 mt-5'>
+            <p className='text-xs font-bold uppercase tracking-wider text-text-muted mb-4'>
+              Custom Provider Credentials
             </p>
-
             {isKnownProvider ? (
               <div className='space-y-4'>
                 {isEditing && (
-                  <p className='text-xs text-text-muted -mt-1'>
-                    Leave fields blank to keep their current stored values.
+                  <p className='text-xs text-text-muted -mt-2 mb-2'>
+                    Leave fields blank to keep existing encrypted values.
                   </p>
                 )}
                 {fields!.map((field) => (
@@ -206,8 +191,8 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
               </div>
             ) : (
               <Textarea
-                label='Credentials (JSON)'
-                hint="This provider type isn't registered with a form yet — enter raw JSON. Ask the developer to add it to the credential field registry."
+                label='Raw JSON Credentials'
+                hint='Raw JSON configuration is active for custom providers.'
                 value={rawJson}
                 onChange={(e) => setRawJson(e.target.value)}
                 error={errors.credentials}
@@ -216,15 +201,20 @@ function ProviderForm({ onClose, provider }: ProviderFormProps) {
           </div>
         )}
       </form>
-
-      <div className='flex items-center justify-end gap-2 -mx-5 -mb-4 mt-6 px-5 py-4 border-t border-border-main bg-bg-base/40'>
+      <div className='flex flex-col-reverse sm:flex-row items-center justify-end gap-3 -mx-6 -mb-5 mt-6 px-6 py-4 border-t border-border-main bg-bg-base/30'>
         <Button
           variant='secondary'
           onClick={onClose}
-          disabled={mutation.isPending}>
+          disabled={mutation.isPending}
+          fullWidth
+          className='sm:w-auto'>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} loading={mutation.isPending}>
+        <Button
+          onClick={handleSubmit}
+          loading={mutation.isPending}
+          fullWidth
+          className='sm:w-auto'>
           {isEditing ? 'Save Changes' : 'Create Provider'}
         </Button>
       </div>
@@ -241,7 +231,7 @@ export function ProviderFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={provider ? `Edit ${provider.name}` : 'Add Provider'}
+      title={provider ? `Edit ${provider.name}` : 'Add New Provider'}
       size='lg'>
       {open && (
         <ProviderForm
