@@ -23,6 +23,7 @@ import { Button } from '../ui/Button/Button';
 import { Card, CardBody } from '../ui/Card/Card';
 import { ProviderFormModal } from '../ui/ProviderFormModal/ProviderFormModal';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal/ConfirmDeleteModal';
+import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
 
 export function ProvidersPage() {
   const queryClient = useQueryClient();
@@ -32,9 +33,16 @@ export function ProvidersPage() {
     null,
   );
 
-  const { data: providers, isLoading } = useQuery({
+  const {
+    data: providers,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['providers'],
     queryFn: getProviders,
+    meta: { silent: true }, // has its own inline error state below
   });
 
   const deleteMutation = useMutation({
@@ -84,7 +92,16 @@ export function ProvidersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isError ? (
+                <TableEmpty colSpan={5}>
+                  <QueryErrorState
+                    message={
+                      error instanceof ApiError ? error.message : undefined
+                    }
+                    onRetry={() => refetch()}
+                  />
+                </TableEmpty>
+              ) : isLoading ? (
                 <TableSkeleton rows={3} columns={5} />
               ) : !providers?.length ? (
                 <TableEmpty colSpan={5}>
