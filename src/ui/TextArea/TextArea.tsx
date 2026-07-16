@@ -5,14 +5,27 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   label?: string;
   error?: string;
   hint?: string;
+  containerClassName?: string;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, error, hint, id, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      containerClassName,
+      label,
+      error,
+      hint,
+      id,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     const textareaId = id || props.name;
 
     return (
-      <div className='flex flex-col gap-1.5 w-full'>
+      <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
         {label && (
           <label
             htmlFor={textareaId}

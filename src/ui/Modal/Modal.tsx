@@ -48,7 +48,7 @@ export function Modal({
         if (e.target === dialogRef.current) onClose();
       }}
       className={cn(
-        'm-auto w-[calc(100%-2rem)] rounded-xl border border-border-main bg-bg-surface p-0 text-text-main backdrop:bg-ink-900/50 backdrop:backdrop-blur-none',
+        'm-auto w-[calc(100%-2rem)] rounded-xl border border-border-main bg-bg-surface p-0 text-text-main backdrop:bg-ink-900/50 backdrop:backdrop-blur-none animate-modal-in',
         sizeClasses[size],
       )}>
       {title && (

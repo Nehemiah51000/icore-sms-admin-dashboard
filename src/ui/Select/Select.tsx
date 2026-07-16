@@ -13,12 +13,15 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   hint?: string;
   options: SelectOption[];
   placeholder?: string;
+  /** Controls layout/width of the whole field (label + select + hint). */
+  containerClassName?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       className,
+      containerClassName,
       label,
       error,
       hint,
@@ -33,7 +36,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || props.name;
 
     return (
-      <div className='flex flex-col gap-1.5 w-full'>
+      <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
         {label && (
           <label
             htmlFor={selectId}

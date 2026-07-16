@@ -1,18 +1,21 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  /** Controls layout/width of the whole field (label + input + hint). */
+  containerClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       className,
+      containerClassName,
       label,
       error,
       hint,
@@ -27,7 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || props.name;
 
     return (
-      <div className='flex flex-col gap-1.5 w-full'>
+      <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
         {label && (
           <label
             htmlFor={inputId}
