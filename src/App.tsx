@@ -7,6 +7,7 @@ import { DashboardLayout } from './layout/DashboardLayout';
 import { ClientsPage } from './pages/ClientsPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
           <Route path='/settings' element={<SettingsPage />} />
         </Route>
       </Route>
+      {/* System Fallback: Catch-all Routing */}
+      <Route path='*' element={<NotFoundPage />} />
     </Routes>
   );
 }
