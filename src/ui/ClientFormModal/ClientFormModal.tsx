@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Wand2, Copy, Check } from 'lucide-react';
 import {
   clientSchema,
   type ClientFormValues,
@@ -14,6 +16,7 @@ import {
 } from '../../lib/api/clients';
 import { getProviders } from '../../lib/api/providers';
 import { ApiError } from '../../lib/api';
+import { generatePassword } from '../../lib/generatePassword';
 import { Modal } from '../Modal/Modal';
 import { Input } from '../Input/Input';
 import { Select } from '../Select/Select';
@@ -78,11 +81,32 @@ function ClientForm({ onClose, client }: ClientFormProps) {
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: defaultValuesFor(client),
   });
+
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(
+    null,
+  );
+  const [copied, setCopied] = useState(false);
+
+  function handleGenerate() {
+    const pwd = generatePassword();
+    setValue('password', pwd, { shouldValidate: true });
+    setGeneratedPassword(pwd);
+    setCopied(false);
+  }
+
+  async function handleCopy() {
+    if (!generatedPassword) return;
+    await navigator.clipboard.writeText(generatedPassword);
+    setCopied(true);
+    toast.success('Password copied to clipboard.');
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   const mutation = useMutation({
     mutationFn: (values: ClientFormValues) => {
@@ -163,14 +187,53 @@ function ClientForm({ onClose, client }: ClientFormProps) {
           />
         </div>
 
-        <Input
-          label={isEditing ? 'New Password' : 'Password'}
-          type='password'
-          placeholder={isEditing ? 'Leave blank to keep current password' : ''}
-          error={errors.password?.message}
-          autoComplete='new-password'
-          {...register('password')}
-        />
+        <div>
+          <div className='flex items-center justify-between mb-1.5'>
+            <label className='text-sm font-medium text-text-main'>
+              {isEditing ? 'New Password' : 'Password'}
+            </label>
+            {!isEditing && (
+              <div className='flex items-center gap-3'>
+                <button
+                  type='button'
+                  onClick={handleGenerate}
+                  className='text-xs font-medium text-navy-500 hover:text-navy-600 cursor-pointer inline-flex items-center gap-1'>
+                  <Wand2 className='h-3.5 w-3.5' /> Generate
+                </button>
+                {generatedPassword && (
+                  <button
+                    type='button'
+                    onClick={handleCopy}
+                    className='text-xs font-medium text-text-muted hover:text-text-main cursor-pointer inline-flex items-center gap-1'>
+                    {copied ? (
+                      <Check className='h-3.5 w-3.5 text-success-500' />
+                    ) : (
+                      <Copy className='h-3.5 w-3.5' />
+                    )}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <Input
+            type={!isEditing && generatedPassword ? 'text' : 'password'}
+            placeholder={
+              isEditing
+                ? 'Leave blank to keep current password'
+                : 'Type one, or generate a password above'
+            }
+            error={errors.password?.message}
+            autoComplete='new-password'
+            {...register('password')}
+          />
+          {!isEditing && generatedPassword && (
+            <p className='text-xs text-text-muted mt-1.5'>
+              Share this password with the client — it won't be shown again
+              after you close this form.
+            </p>
+          )}
+        </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <Select
