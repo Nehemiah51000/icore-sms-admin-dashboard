@@ -158,6 +158,7 @@ function ClientForm({ onClose, client }: ClientFormProps) {
             placeholder="Client's login username"
             hint='What the client types to sign in — separate from their display name.'
             error={errors.login?.message}
+            autoComplete='off'
             {...register('login')}
           />
         </div>
@@ -167,6 +168,7 @@ function ClientForm({ onClose, client }: ClientFormProps) {
           type='password'
           placeholder={isEditing ? 'Leave blank to keep current password' : ''}
           error={errors.password?.message}
+          autoComplete='new-password'
           {...register('password')}
         />
 
@@ -183,6 +185,7 @@ function ClientForm({ onClose, client }: ClientFormProps) {
             placeholder="Exact username on the provider's platform"
             hint='Must match character-for-character.'
             error={errors.provider_login_name?.message}
+            autoComplete='off'
             {...register('provider_login_name')}
           />
         </div>
