@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Receipt } from 'lucide-react';
+import { Receipt, X } from 'lucide-react';
 import { getTransactions } from '../lib/api/transactions';
 import { getProviders } from '../lib/api/providers';
 import { statusToVariant, stageLabel } from '../lib/statusMappings';
 import { ApiError } from '../lib/api';
+import { useTransactionFiltersStore } from '../stores/transactionFiltersStore';
 import {
   Table,
   TableHeader,
@@ -21,12 +21,20 @@ import { Select } from '../ui/Select/Select';
 import { Card, CardBody } from '../ui/Card/Card';
 import { TransactionDetailModal } from '../ui/TransactionDetailModal/TransactionDetailModal';
 import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
+import { useState } from 'react';
 
 export function TransactionsPage() {
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState('');
-  const [providerId, setProviderId] = useState('');
   const [selectedTxnId, setSelectedTxnId] = useState<number | null>(null);
+
+  const status = useTransactionFiltersStore((s) => s.status);
+  const providerId = useTransactionFiltersStore((s) => s.providerId);
+  const page = useTransactionFiltersStore((s) => s.page);
+  const setStatus = useTransactionFiltersStore((s) => s.setStatus);
+  const setProviderId = useTransactionFiltersStore((s) => s.setProviderId);
+  const setPage = useTransactionFiltersStore((s) => s.setPage);
+  const clearFilters = useTransactionFiltersStore((s) => s.clear);
+
+  const hasActiveFilters = Boolean(status || providerId);
 
   const { data: providers } = useQuery({
     queryKey: ['providers'],
@@ -39,11 +47,6 @@ export function TransactionsPage() {
     meta: { silent: true },
   });
 
-  function handleFilterChange(setter: (v: string) => void, value: string) {
-    setter(value);
-    setPage(1); // reset to page 1 whenever a filter changes
-  }
-
   return (
     <div>
       <div className='mb-6'>
@@ -53,7 +56,7 @@ export function TransactionsPage() {
         </p>
       </div>
 
-      <div className='flex flex-col sm:flex-row gap-3 mb-4'>
+      <div className='flex flex-col sm:flex-row sm:items-center gap-3 mb-4'>
         <Select
           options={[
             { value: 'pending', label: 'Pending' },
@@ -62,7 +65,7 @@ export function TransactionsPage() {
           ]}
           placeholder='All statuses'
           value={status}
-          onChange={(e) => handleFilterChange(setStatus, e.target.value)}
+          onChange={(e) => setStatus(e.target.value)}
           containerClassName='sm:max-w-[180px]'
         />
         <Select
@@ -72,9 +75,16 @@ export function TransactionsPage() {
           }
           placeholder='All providers'
           value={providerId}
-          onChange={(e) => handleFilterChange(setProviderId, e.target.value)}
+          onChange={(e) => setProviderId(e.target.value)}
           containerClassName='sm:max-w-[180px]'
         />
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className='inline-flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text-main cursor-pointer transition-colors sm:ml-1'>
+            <X className='h-3.5 w-3.5' /> Clear filters
+          </button>
+        )}
       </div>
 
       <Card>
@@ -106,7 +116,9 @@ export function TransactionsPage() {
                 <TableEmpty colSpan={6}>
                   <div className='flex flex-col items-center gap-2'>
                     <Receipt className='h-8 w-8 text-text-muted' />
-                    No transactions match your filters.
+                    {hasActiveFilters
+                      ? 'No transactions match your filters.'
+                      : 'No transactions yet.'}
                   </div>
                 </TableEmpty>
               ) : (
