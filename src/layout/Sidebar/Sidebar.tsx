@@ -28,7 +28,7 @@ export function Sidebar({
     <>
       {open && (
         <div
-          className='fixed inset-0 bg-ink-900/50 z-40 lg:hidden'
+          className='fixed inset-0 bg-ink-900/60 backdrop-blur-xs z-40 lg:hidden transition-opacity'
           onClick={onClose}
           aria-hidden='true'
         />
@@ -36,24 +36,26 @@ export function Sidebar({
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-navy-500 flex flex-col transition-all duration-200 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-50 bg-bg-surface border-r border-border-main flex flex-col transition-all duration-200 lg:translate-x-0 lg:static lg:z-auto shadow-xs',
           open ? 'translate-x-0' : '-translate-x-full',
           collapsed ? 'lg:w-20' : 'lg:w-64',
         )}>
-        <div className='flex items-center gap-2 px-5 h-16 border-b border-white/10 overflow-hidden'>
+        {/* Brand Header */}
+        <div className='flex items-center gap-3 px-5 h-16 border-b border-border-main overflow-hidden shrink-0'>
           <img
             src='/ic_frame_2.svg'
             alt='ICORE'
-            className='h-8 w-8 rounded-lg shrink-0'
+            className='h-8 w-auto shrink-0'
           />
           {!collapsed && (
-            <span className='text-white font-semibold text-sm whitespace-nowrap'>
-              ICORE Admin
+            <span className='text-text-main font-bold text-sm tracking-tight whitespace-nowrap'>
+              ICORE SMS Admin
             </span>
           )}
         </div>
 
-        <nav className='flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1'>
+        {/* Navigation Links */}
+        <nav className='flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1.5'>
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -62,11 +64,11 @@ export function Sidebar({
               title={collapsed ? link.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                   collapsed && 'lg:justify-center',
                   isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-navy-200 hover:bg-white/5 hover:text-white',
+                    ? 'bg-navy-500 text-white dark:bg-navy-600 dark:text-white shadow-xs font-semibold'
+                    : 'text-text-muted hover:bg-bg-surface-hover hover:text-text-main',
                 )
               }>
               <span className='shrink-0'>{link.icon}</span>
@@ -77,10 +79,11 @@ export function Sidebar({
           ))}
         </nav>
 
+        {/* Collapse Controls */}
         <button
           onClick={onToggleCollapse}
           className={cn(
-            'hidden lg:flex items-center gap-2 px-3 py-3 mx-3 mb-3 rounded-lg text-navy-200 hover:bg-white/5 hover:text-white transition-colors cursor-pointer',
+            'hidden lg:flex items-center gap-2 px-3 py-2.5 mx-3 mb-3 rounded-xl border border-border-main/60 text-text-muted hover:text-text-main hover:bg-bg-surface-hover transition-colors cursor-pointer',
             collapsed && 'justify-center',
           )}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
@@ -89,7 +92,9 @@ export function Sidebar({
           ) : (
             <>
               <PanelLeftClose className='h-4 w-4 shrink-0' />
-              <span className='text-xs whitespace-nowrap'>Collapse</span>
+              <span className='text-xs font-medium whitespace-nowrap'>
+                Collapse Menu
+              </span>
             </>
           )}
         </button>
