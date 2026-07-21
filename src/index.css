@@ -85,3 +85,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@keyframes hydration-slide {
+  0% {
+    left: -35%;
+    width: 30%;
+  }
+  50% {
+    width: 45%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
