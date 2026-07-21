@@ -226,7 +226,7 @@ function ClientForm({ onClose, client }: ClientFormProps) {
             )}
           </div>
           <Input
-            type={!isEditing && generatedPassword ? 'text' : 'password'}
+            type='password'
             placeholder={
               isEditing
                 ? 'Leave blank to keep current password'
