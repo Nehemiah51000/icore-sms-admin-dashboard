@@ -10,7 +10,7 @@ export const clientSchema = z.object({
   phone: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(/^254\d{9}$/, 'Use format 254XXXXXXXXX, no leading 0 or +'),
+    .regex(/^254\d{9}$/, 'Enter a valid phone number'),
   login: z.string().min(1, 'Login is required'),
   password: z.string().optional(),
   provider_id: z.string().min(1, 'Select a provider'),

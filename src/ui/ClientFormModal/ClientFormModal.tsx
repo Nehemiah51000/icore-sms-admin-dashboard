@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import { ApiError } from '../../lib/api';
 import { generatePassword } from '../../lib/generatePassword';
 import { Modal } from '../Modal/Modal';
 import { Input } from '../Input/Input';
+import { PhoneInput } from '../PhoneInput/PhoneInput';
 import { Select } from '../Select/Select';
 import { Button } from '../Button/Button';
 
@@ -81,6 +82,7 @@ function ClientForm({ onClose, client }: ClientFormProps) {
     register,
     handleSubmit,
     setError,
+    control,
     setValue,
     formState: { errors },
   } = useForm<ClientFormValues>({
@@ -170,12 +172,19 @@ function ClientForm({ onClose, client }: ClientFormProps) {
         </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          <Input
-            label='Phone'
-            placeholder='254791381097'
-            hint='Format: 254XXXXXXXXX — used for STK push.'
-            error={errors.phone?.message}
-            {...register('phone')}
+          <Controller
+            name='phone'
+            control={control}
+            render={({ field }) => (
+              <PhoneInput
+                label='Phone'
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                hint='Used for STK push.'
+                error={errors.phone?.message}
+              />
+            )}
           />
           <Input
             label='Login'
