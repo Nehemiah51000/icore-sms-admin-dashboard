@@ -18,8 +18,6 @@ export function LoginPage() {
   const [searchParams] = useSearchParams();
   const expired = searchParams.get('expired') === '1';
 
-  // Legitimate one-time effect: firing an imperative toast in response to
-  // arriving here via a redirect, not syncing React state from React state.
   useEffect(() => {
     if (expired) {
       toast.error('Your session has expired. Please sign in again.');
@@ -63,29 +61,33 @@ export function LoginPage() {
   }
 
   return (
-    <div className='min-h-screen bg-bg-base flex items-center justify-center p-4'>
-      <div className='w-full max-w-sm'>
-        <div className='flex flex-col items-center gap-2 mb-6'>
-          <img
-            src='/ic_frame_2.svg'
-            alt='ICORE'
-            className='h-12 w-12 rounded-xl'
-          />
-          <h1 className='text-lg font-semibold text-text-main'>
-            ICORE SMS Admin
-          </h1>
-          <p className='text-xs text-text-muted'>
-            Sign in to manage clients and providers
-          </p>
+    <div className='min-h-screen bg-bg-base flex items-center justify-center p-6 selection:bg-navy-500 selection:text-white'>
+      <div className='w-full max-w-md space-y-6 animate-page-in'>
+        <div className='flex flex-col items-center text-center gap-3'>
+          <div className='px-6 py-4 sm:px-8 sm:py-5 rounded-2xl bg-white border border-border-main/80 shadow-sm hover:scale-102 transition-all flex items-center justify-center'>
+            <img
+              src='/ICORE_logo_last_iteration.svg'
+              alt='ICORE Information Systems Ltd'
+              className='w-52 sm:w-64 h-auto max-h-20 object-contain [image-rendering:-webkit-optimize-contrast]'
+            />
+          </div>
+          <div>
+            <h1 className='text-xl font-bold tracking-tight text-text-main'>
+              ICORE SMS Admin Portal
+            </h1>
+            <p className='text-xs text-text-muted mt-1'>
+              Sign in to manage SMS clients & provider instances
+            </p>
+          </div>
         </div>
 
-        <Card>
-          <CardBody>
+        <Card className='shadow-lg border-border-main/80'>
+          <CardBody className='p-6 sm:p-8'>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
               <Input
-                label='Email'
+                label='Email Address'
                 type='email'
-                placeholder='you@icoresystems.co.ke'
+                placeholder='admin@icoresystems.co.ke'
                 error={errors.email?.message}
                 {...register('email')}
               />
@@ -96,8 +98,12 @@ export function LoginPage() {
                 error={errors.password?.message}
                 {...register('password')}
               />
-              <Button type='submit' fullWidth loading={mutation.isPending}>
-                Sign In
+              <Button
+                type='submit'
+                fullWidth
+                loading={mutation.isPending}
+                className='mt-2 shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-transform'>
+                Sign In to Dashboard
               </Button>
             </form>
           </CardBody>
