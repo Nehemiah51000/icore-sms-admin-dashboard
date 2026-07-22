@@ -13,9 +13,9 @@ export function HydrationFallback({
     <div className='min-h-screen bg-bg-base flex flex-col items-center justify-center p-4 transition-colors duration-200 select-none'>
       <div className='flex flex-col items-center gap-6 max-w-xs text-center animate-page-in'>
         {/* Pulsing Branded Logo Container */}
-        <div className='relative flex items-center justify-center p-4 bg-bg-surface border border-border-main/80 rounded-2xl shadow-md'>
+        <div className='relative flex items-center justify-center p-4 bg-white border border-border-main/80 rounded-2xl shadow-md'>
           {/* Subtle Ambient Glow Behind Logo */}
-          <div className='absolute -inset-1 rounded-2xl bg-navy-500/20 blur-md animate-pulse dark:bg-navy-400/20' />
+          <div className='absolute -inset-1 rounded-2xl bg-navy-500/20 blur-md animate-pulse dark:bg-navy-500/30' />
 
           <img
             src={logoSrc}
@@ -36,7 +36,7 @@ export function HydrationFallback({
 
         {/* Custom Sleek Progress Bar Indicator */}
         <div className='w-36 h-1 bg-bg-surface border border-border-main/60 rounded-full overflow-hidden relative shadow-inner'>
-          <div className='absolute inset-y-0 bg-navy-500 dark:bg-navy-400 rounded-full w-1/3 animate-[hydration-slide_1.4s_infinite_ease-in-out]' />
+          <div className='absolute inset-y-0 bg-text-main rounded-full w-1/3 animate-[hydration-slide_1.4s_infinite_ease-in-out]' />
         </div>
       </div>
     </div>
