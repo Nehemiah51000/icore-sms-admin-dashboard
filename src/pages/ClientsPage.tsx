@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -39,9 +39,9 @@ export function ClientsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
-  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+  const hasHandledHighlight = useRef(false);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +58,28 @@ export function ClientsPage() {
     queryFn: getClients,
     meta: { silent: true },
   });
+
+  useEffect(() => {
+    if (!highlightId || !clients || hasHandledHighlight.current) return;
+
+    const target = clients.find((c) => c.id === Number(highlightId));
+    if (!target) return;
+
+    hasHandledHighlight.current = true;
+
+    // Clear the query string via the plain History API instead of
+    // react-router's setSearchParams — that avoids triggering a router
+    // navigation/state update in the same tick as the local setState calls
+    // below, which is what caused the "state setters cannot be called
+    // synchronously" error.
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // Batch state updates in a microtask to avoid cascading renders
+    queueMicrotask(() => {
+      setEditingClient(target);
+      setFormOpen(true);
+    });
+  }, [highlightId, clients]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteClient(id),
