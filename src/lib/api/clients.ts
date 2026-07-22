@@ -10,12 +10,9 @@ export interface Client {
   provider_login_name: string;
   status: 'active' | 'suspended';
   low_balance_threshold: number | null;
+  low_balance_flagged_at: string | null;
   created_at: string;
-  provider?: {
-    id: number;
-    name: string;
-    slug: string;
-  };
+  provider?: { id: number; name: string; slug: string };
 }
 
 export interface ClientPayload {

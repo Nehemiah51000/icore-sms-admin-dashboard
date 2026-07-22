@@ -93,8 +93,8 @@ export function ClientsPage() {
 
   // Derived Stats
   const activeCount = clients?.filter((c) => c.status === 'active').length ?? 0;
-  const flaggedCount = 0;
-  // clients?.filter((c) => c.low_balance_flagged_at).length ?? 0;
+  const flaggedCount =
+    clients?.filter((c) => c.low_balance_flagged_at).length ?? 0;
 
   return (
     <div className='space-y-6 animate-page-in'>
