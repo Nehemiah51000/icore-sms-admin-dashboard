@@ -6,6 +6,20 @@
   <link rel="icon" type="image/png" href="/ic_frame_2.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ICORE SMS Admin Dashboard</title>
+   <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('icore-theme');
+        var isDark = saved
+          ? saved === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
