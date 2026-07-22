@@ -32,11 +32,23 @@ export interface PaginatedResponse<T> {
   per_page: number;
 }
 
+export interface TransactionFilters {
+  status?: string;
+  provider_id?: string;
+  page?: number;
+  search?: string;
+  from_date?: string;
+  to_date?: string;
+}
+
 export function getTransactions(filters: TransactionFilters) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
   if (filters.provider_id) params.set('provider_id', filters.provider_id);
   if (filters.page) params.set('page', String(filters.page));
+  if (filters.search) params.set('search', filters.search);
+  if (filters.from_date) params.set('from_date', filters.from_date);
+  if (filters.to_date) params.set('to_date', filters.to_date);
 
   const query = params.toString();
   return api.get<PaginatedResponse<Transaction>>(

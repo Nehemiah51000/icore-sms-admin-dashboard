@@ -22,6 +22,7 @@ import { Select } from '../ui/Select/Select';
 import { Card, CardBody } from '../ui/Card/Card';
 import { TransactionDetailModal } from '../ui/TransactionDetailModal/TransactionDetailModal';
 import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
+import { useDebouncedValue } from '../lib/useDebounce';
 
 type DatePreset = 'all' | '7d' | '30d' | 'custom';
 
@@ -33,6 +34,7 @@ export function TransactionsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 400);
 
   const status = useTransactionFiltersStore((s) => s.status);
   const providerId = useTransactionFiltersStore((s) => s.providerId);
@@ -43,6 +45,7 @@ export function TransactionsPage() {
   const clearFilters = useTransactionFiltersStore((s) => s.clear);
 
   const handleDatePresetChange = (preset: DatePreset) => {
+    setPage(1);
     setDatePreset(preset);
     const today = new Date();
 
@@ -81,9 +84,17 @@ export function TransactionsPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [
       'transactions',
-      { page, status, providerId, searchQuery, startDate, endDate },
+      { page, status, providerId, debouncedSearch, startDate, endDate },
     ],
-    queryFn: () => getTransactions({ page, status, provider_id: providerId }),
+    queryFn: () =>
+      getTransactions({
+        page,
+        status,
+        provider_id: providerId,
+        search: debouncedSearch,
+        from_date: startDate,
+        to_date: endDate,
+      }),
     meta: { silent: true },
   });
 
@@ -110,7 +121,10 @@ export function TransactionsPage() {
             <input
               type='text'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               placeholder='Search by Client Name or Transaction ID...'
               className='w-full bg-bg-base border border-border-main rounded-xl pl-10 pr-4 py-2 text-xs text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-navy-500/20 transition-all'
             />
