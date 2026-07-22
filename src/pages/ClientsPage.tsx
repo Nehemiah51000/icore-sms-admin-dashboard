@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -30,6 +30,7 @@ import { Card, CardBody } from '../ui/Card/Card';
 import { ClientFormModal } from '../ui/ClientFormModal/ClientFormModal';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal/ConfirmDeleteModal';
 import { QueryErrorState } from '../ui/QueryErrorState/QueryErrorState';
+import { useSearchParams } from 'react-router-dom';
 
 type StatusFilter = 'all' | 'active' | 'suspended';
 
@@ -38,6 +39,9 @@ export function ClientsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('id');
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
